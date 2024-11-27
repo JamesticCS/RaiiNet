@@ -77,3 +77,36 @@ Board::BoardIterator Board::begin() {
 Board::BoardIterator Board::end() { 
     return BoardIterator{this, 8, 0}; 
 }
+
+void Board::placeLink(int row, int col, std::unique_ptr<Link> link) {
+    if (isValidPosition(row, col)) {
+        grid[row][col].setLink(std::move(link));
+        notifyObservers();
+    }
+}
+
+bool Board::isServerPortAt(int row, int col) const {
+    if (isValidPosition(row, col)) {
+        return grid[row][col].isServerPort();
+    }
+    return false;
+}
+
+bool Board::hasLinkAt(int row, int col) const {
+    if (isValidPosition(row, col)) {
+        return grid[row][col].hasLink();
+    }
+    return false;
+}
+
+char Board::getLinkDisplayChar(int row, int col) const {
+    if (!isValidPosition(row, col) || !grid[row][col].hasLink()) {
+        return '.';
+    }
+    Link* link = grid[row][col].getLink();
+    if (link->getOwner() == 1) {
+        return 'a' + col;  // Player 1 pieces are a-h
+    } else {
+        return 'A' + col;  // Player 2 pieces are A-H
+    }
+}

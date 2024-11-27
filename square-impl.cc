@@ -1,15 +1,11 @@
 module square;
 
 bool Square::hasLink() const {
-   // placeholder
-   return false;
-   // return link != nullptr;
+   return link != nullptr;
 }
 
 bool Square::isEmpty() const {
-   // placeholder
-   return true;
-   
+   !hasLink();
 }
 bool Square::hasFirewall() const {
    return firewall;
@@ -30,4 +26,16 @@ bool Square::isTopOrBottomEdge() const {
 void Square::placeFirewall(int playerId) {  
    firewall = true;
    firewallOwner = playerId;  
+}
+
+Link* Square::getLink() const {
+    return link.get();
+}
+
+void Square::setLink(std::unique_ptr<Link> newLink) {
+    link = std::move(newLink);
+}
+
+void Square::removeLink() {
+    link = nullptr;
 }

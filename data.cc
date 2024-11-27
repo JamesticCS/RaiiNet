@@ -1,6 +1,6 @@
 export module data;
 
-
+import link; 
 export class Data: public Link
 {
     public:

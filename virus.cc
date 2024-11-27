@@ -1,6 +1,6 @@
 export module virus;
 
-
+import link; 
 export class Virus: public Link
 {
     public:

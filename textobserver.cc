@@ -6,6 +6,7 @@ import <iostream>;
 import <string>;
 import square;
 import subject;
+import player;
 
 export class TextObserver : public Observer {
 public:

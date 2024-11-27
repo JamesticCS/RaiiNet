@@ -13,7 +13,10 @@ export class Board : public Subject
     std::vector<std::vector<Square>> grid; 
     void setServerPorts();
     void setEdgeSquares();
-    bool isValidPosition(int row, int col) const;    
+    bool isValidPosition(int row, int col) const;  
+    bool isServerPortAt(int row, int col) const;
+    bool hasLinkAt(int row, int col) const;
+    char getLinkDisplayChar(int row, int col) const;  // Returns piece letter  
 
     public:
         Board();
@@ -37,4 +40,7 @@ export class Board : public Subject
     BoardIterator begin();
     
     BoardIterator end();
+
+    void placeLink(int row, int col, std::unique_ptr<Link> link);
+    bool moveLink(int fromRow, int fromCol, int toRow, int toCol);
 };
