@@ -1,5 +1,5 @@
 module textobserver;
-import subject;
+
 
 TextObserver::TextObserver(Board* board) : subject{board} {
     subject->attach(this);
