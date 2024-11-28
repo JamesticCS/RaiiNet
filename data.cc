@@ -1,9 +1,8 @@
-export module data;
+// data.cc
+#include "data.h"
+Data::Data(int strength, int owner, char identifier): Link{strength, owner, identifier} {}
 
-import link; 
-export class Data: public Link
+bool Data::isVirus() const
 {
-    public:
-        Data(int strength, int owner);
-        bool isVirus() const override;
-};
+    return false;
+}

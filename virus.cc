@@ -1,9 +1,8 @@
-export module virus;
+// virus.cc
+#include "virus.h"
+Virus::Virus(int strength, int owner, char identifier): Link{strength, owner, identifier} {}
 
-import link; 
-export class Virus: public Link
+bool Virus::isVirus() const
 {
-    public:
-        Virus(int strength, int owner);
-        bool isVirus() const override;
-};
+    return true;
+}

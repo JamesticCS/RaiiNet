@@ -1,3 +1,0 @@
-module observer;
-
-Observer::~Observer() {}

@@ -1,4 +1,5 @@
-import gameController;
+// main.cc
+#include "gamecontroller.h"
 
 int main() {
     GameController game{2};  // 2-player game

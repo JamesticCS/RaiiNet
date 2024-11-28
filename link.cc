@@ -1,24 +1,42 @@
-export module link;
+// link.cc
+#include "link.h"
 
-// import player;
-
-export class Link
+Link::Link(int strength, int owner, char identifier):
+ strength{strength}, revealed{false}, owner{owner},
+  identifier{identifier} {}
+int Link::getStrength() const
 {
-    int strength;
-    bool revealed;
-    // Player * owner; when player class is implemented
-    int owner;
-    protected:
-        Link(int strength, int owner) : strength{strength}, revealed{false}, owner{owner} {}
-        
+    return strength;
+}
 
-    public:
-        virtual ~Link() = default;
-        int getStrength() const;
-        bool isRevealed() const;
-        int getOwner() const;
-        void reveal();
-        Link battle(Link &other);
-        virtual bool isVirus() const = 0; // pure virtual
+bool Link::isRevealed() const
+{
+    return revealed;
+}
 
-};
+int Link::getOwner() const
+{
+    return owner;
+}
+
+void Link::reveal()
+{
+    revealed = true;
+}
+
+Link & Link::battle(Link &other)
+{
+    if (this->getStrength() >= other.getStrength())
+    {
+        return *this;
+    }
+    else
+    {
+        return other;
+    }
+}
+
+char Link::getIdentifier() const
+{
+    return identifier;
+}

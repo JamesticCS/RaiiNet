@@ -1,12 +1,28 @@
-export module subject;
-import <vector>;
-import observer;
-export class Subject
+// subject.cc
+#include "subject.h"
+Subject::~Subject(){}
+
+void Subject::notifyObservers()
 {
-    std::vector<Observer *> observers;
-    public:
-        void notifyObservers();
-        void attach(Observer *ob);
-        void detach(Observer *ob);
-        virtual ~Subject()=0;
-};
+    for (auto ob: observers)
+    {
+        ob->notify();
+    }
+}
+
+void Subject::attach(Observer *ob)
+{
+    observers.emplace_back(ob);
+}
+
+void Subject::detach(Observer *ob)
+{
+   for (auto it = observers.begin(); it != observers.end(); ++it)
+   {
+        if (*it == ob)
+        {
+            observers.erase(it);
+            break;
+        }
+   }
+}
