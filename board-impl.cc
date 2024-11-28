@@ -110,3 +110,33 @@ char Board::getLinkDisplayChar(int row, int col) const {
         return 'A' + col;  // Player 2 pieces are A-H
     }
 }
+
+bool Board::moveLink(int fromRow, int fromCol, int toRow, int toCol) {
+    // Validate positions
+    if (!isValidPosition(fromRow, fromCol) || !isValidPosition(toRow, toCol)) {
+        return false;
+    }
+
+    Square& fromSquare = grid[fromRow][fromCol];
+    Square& toSquare = grid[toRow][toCol];
+
+    // Check if source has a link
+    if (!fromSquare.hasLink()) {
+        return false;
+    }
+
+    // Check if destination is empty or has opponent's link (for battle)
+    if (toSquare.hasLink()) {
+        // For now, just block the move if destination has any link
+        // Will implement battle mechanics later
+        return false;
+    }
+
+    // Move is valid, transfer the link
+    toSquare.setLink(fromSquare.getLink());
+    fromSquare.removeLink();
+    notifyObservers();
+    
+    return true;
+}
+

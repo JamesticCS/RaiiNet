@@ -1,12 +1,8 @@
+import gameController;
 
-import board;
-import square;
-import textobserver;
-import subject;
-import observer;
 int main() {
-    Board b;
-    TextObserver t(&b);
-    b.notifyObservers();  // Should display the board
+    GameController game{2};  // 2-player game
+    game.initializeGame();   // Set up initial board state
+    game.runGame();         // Start game loop
     return 0;
 }

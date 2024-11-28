@@ -1,6 +1,5 @@
 export module board;
 
-
 import square;
 import subject;
 import <vector>;
