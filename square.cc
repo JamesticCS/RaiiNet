@@ -28,16 +28,14 @@ void Square::placeFirewall(int playerId) {
    firewallOwner = playerId;  
 }
 
-const std::unique_ptr<Link>& Square::getLink() const {
+
+
+Link* Square::getLink() {
     return link;
 }
 
-std::unique_ptr<Link>& Square::getLink() {
-    return link;
-}
-
-void Square::setLink(std::unique_ptr<Link> newLink) {
-    link = std::move(newLink);
+void Square::setLink(Link* newLink) {
+    link = newLink;
 }
 
 void Square::removeLink() {

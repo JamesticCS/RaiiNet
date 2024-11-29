@@ -33,3 +33,27 @@ int Player::getVirusCount() const {
 int Player::getRemainingAbilities() const {
    return remainingAbilities;
 }
+
+void Player::addLink(std::unique_ptr<Link> link) {
+    links.emplace_back(std::move(link));
+}
+
+void Player::downloadLink(Link* link) {
+    link->setDownloaded();
+    if (link->isVirus()) {
+        incrementVirusCount();
+    } else {
+        incrementDataCount();
+    }
+}
+
+Link* Player::getLinkByIdentifier(char id) const {
+    for (const auto& link : links) {
+        if (link->getIdentifier() == id) {
+            return link.get();
+        }
+    }
+    return nullptr;
+}
+
+ const std::vector<std::unique_ptr<Link>>& Player::getLinks() const { return links; }

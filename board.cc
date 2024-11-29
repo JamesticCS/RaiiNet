@@ -84,16 +84,16 @@ Board::BoardIterator Board::end() {
     return BoardIterator{this, 8, 0}; 
 }
 
-void Board::placeLink(int row, int col, std::unique_ptr<Link> link) {
+void Board::placeLink(int row, int col, Link* link) {
     if (isValidPosition(row, col)) {
-        grid[row][col]->setLink(std::move(link));
+        grid[row][col]->setLink(link);
         notifyObservers();
     }
 }
 
-void Board::placeLinkNoNotify(int row, int col, std::unique_ptr<Link> link) {
+void Board::placeLinkNoNotify(int row, int col, Link* link) {
     if (isValidPosition(row, col)) {
-        grid[row][col]->setLink(std::move(link));
+        grid[row][col]->setLink(link);
     }
 }
 
@@ -115,28 +115,111 @@ char Board::getLinkDisplayChar(int row, int col) const {
     if (!isValidPosition(row, col) || !grid[row][col]->hasLink()) {
         return '.';
     }
-    Link* link = grid[row][col]->getLink().get();;
+    Link* link = grid[row][col]->getLink();;
     return link->getIdentifier();
 }
 
-bool Board::moveLink(int fromRow, int fromCol, int toRow, int toCol) {
-    if (!isValidPosition(fromRow, fromCol) || !isValidPosition(toRow, toCol)) {
+bool Board::moveLink(int fromRow, int fromCol, int toRow, int toCol, Player& currentPlayer, Player& otherPlayer) {
+    if (!isValidPosition(fromRow, fromCol)) {
         return false;
     }
 
     auto& fromSquare = grid[fromRow][fromCol];
-    auto& toSquare = grid[toRow][toCol];
-
     if (!fromSquare->hasLink()) {
         return false;
     }
 
-    if (toSquare->hasLink()) {
+    Link* movingLink = fromSquare->getLink();
+    int currentPlayerId = currentPlayer.getPlayerId();
+    
+    // Check if moving off edge
+    bool movingOffP1Edge = (currentPlayerId == 1 && fromRow == 7 && toRow == 8);
+    bool movingOffP2Edge = (currentPlayerId == 2 && fromRow == 0 && toRow == -1);
+    
+    // Allow moving off opponent's edge and handle download
+    if (movingOffP1Edge || movingOffP2Edge) {
+        currentPlayer.downloadLink(movingLink);
+        fromSquare->removeLink();
+        notifyObservers();
+        return true;
+    }
+    
+    if (!isValidPosition(toRow, toCol)) {
         return false;
     }
 
-    toSquare->setLink(std::move(fromSquare->getLink())); 
-    notifyObservers();
+    auto& toSquare = grid[toRow][toCol];
+    
+    // Can't move onto own server ports
+    if (isOwnServerPort(toRow, toCol, currentPlayerId)) {
+        return false;
+    }
+    
+    // Check if moving onto own piece
+    if (toSquare->hasLink() && toSquare->getLink()->getOwner() == currentPlayerId) {
+        return false;
+    }
+    
+    // Handle battle if moving onto opponent's piece
+    if (toSquare->hasLink()) {
+        Link* attacker = movingLink;
+        Link* defender = toSquare->getLink();
+        
+        // Reveal both links
+        attacker->reveal();
+        defender->reveal();
+        
+        // Battle resolution
+        if (attacker->getStrength() >= defender->getStrength()) {
+            // Attacker wins - download defender
+            currentPlayer.downloadLink(defender);
+            toSquare->setLink(attacker);
+            fromSquare->removeLink();
+        } else {
+            // Defender wins - download attacker
+            otherPlayer.downloadLink(attacker);
+            fromSquare->removeLink();
+        }
+  //      notifyObservers();
+        return true;
+    }
+    
+    // Handle moving into opponent's server port
+    if (isOpponentServerPort(toRow, toCol, currentPlayerId)) {
+        otherPlayer.downloadLink(movingLink);  // OPPONENT downloads the piece
+        fromSquare->removeLink();
+      //  notifyObservers();
+        return true;
+    }
+    
+    // Normal movement
+    toSquare->setLink(movingLink);
+    fromSquare->removeLink();
+   // notifyObservers();
     return true;
 }
 
+
+bool Board::isP1ServerPort(int row, int col) const {
+    return row == 0 && (col == 3 || col == 4);
+}
+
+bool Board::isP2ServerPort(int row, int col) const {
+    return row == 7 && (col == 3 || col == 4);
+}
+
+bool Board::isOpponentServerPort(int row, int col, int playerId) const {
+    if (playerId == 1) {
+        return isP2ServerPort(row, col);
+    } else {
+        return isP1ServerPort(row, col);
+    }
+}
+
+bool Board::isOwnServerPort(int row, int col, int playerId) const {
+    if (playerId == 1) {
+        return isP1ServerPort(row, col);
+    } else {
+        return isP2ServerPort(row, col);
+    }
+}

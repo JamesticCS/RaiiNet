@@ -5,7 +5,7 @@
 #include "square.h"
 #include "subject.h"
 #include <vector>
-
+#include "player.h"
 
 class Board : public Subject
 {
@@ -14,9 +14,8 @@ class Board : public Subject
     std::vector<std::vector<std::unique_ptr<Square>>> grid;
     void setServerPorts();
     void setEdgeSquares();  
-    int lastDownloadPlayer = 0;  // Which player got the download
-    bool wasDownloadedPieceVirus = false;
-    bool downloadHappened = false;
+    bool isP1ServerPort(int row, int col) const;
+    bool isP2ServerPort(int row, int col) const;
     
     public:
         Board();
@@ -45,12 +44,10 @@ class Board : public Subject
     
     BoardIterator end();
 
-    void placeLink(int row, int col, std::unique_ptr<Link> link);
-    void placeLinkNoNotify(int row, int col, std::unique_ptr<Link> link);
-    bool moveLink(int fromRow, int fromCol, int toRow, int toCol);
-    bool wasDownloaded() const { return downloadHappened; }
-    int getDownloadPlayer() const { return lastDownloadPlayer; }
-    bool wasVirusDownloaded() const { return wasDownloadedPieceVirus; }
-    void clearDownloadStatus() { downloadHappened = false; }
+    void placeLink(int row, int col, Link* link);
+    void placeLinkNoNotify(int row, int col, Link* link);
+    bool moveLink(int fromRow, int fromCol, int toRow, int toCol, Player& currentPlayer, Player& otherPlayer);
+    bool isOpponentServerPort(int row, int col, int playerId) const;
+    bool isOwnServerPort(int row, int col, int playerId) const;
 };
 #endif

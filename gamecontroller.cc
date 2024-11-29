@@ -1,14 +1,34 @@
 // gameController.cc
 #include "gamecontroller.h"
-GameController::GameController(int numPlayers) : board{std::make_unique<Board>()} {
+GameController::GameController(int numPlayers, std::string link1File, std::string link2File):
+ board{std::make_unique<Board>()} {
+    // random seeding
+    std::srand(std::time(nullptr));
 
     if (numPlayers != 2 && numPlayers != 4) {
         throw std::invalid_argument("Invalid number of players");
     }
     for (int i = 1; i <= numPlayers; ++i) {
-        players.emplace_back(i);  // Create players with IDs 1 to numPlayers
+        players.emplace_back(i);
     }
-    display = std::make_unique<TextObserver>(board.get());
+    display = std::make_unique<TextObserver>(board.get(), this);
+
+    // Get links for each player
+    std::vector<LinkInfo> p1Links;
+    if (link1File.empty()) {
+        p1Links = getRandomizedLinks(1);
+    } else {
+        p1Links = parseLinksFile(link1File, 1);
+    }
+
+    std::vector<LinkInfo> p2Links;
+    if (link2File.empty()) {
+        p2Links = getRandomizedLinks(2);
+    } else {
+        p2Links = parseLinksFile(link2File, 2);
+    }
+    
+    initializeGame(p1Links, p2Links);  // Use custom initialization
 }
 
 Player& GameController::getCurrentPlayer() {
@@ -21,29 +41,6 @@ void GameController::nextTurn() {
 
 int GameController::getNumPlayers() const {
     return players.size();
-}
-
-void GameController::initializeGame() const {
-    // Placeholder
-
-    board->placeLinkNoNotify(0, 0, std::make_unique<Virus>(1, 1, 'a'));  // a: V1
-    board->placeLinkNoNotify(0, 1, std::make_unique<Data>(4, 1, 'b'));   // b: D4
-    board->placeLinkNoNotify(0, 2, std::make_unique<Virus>(3, 1, 'c'));  // c: V3
-    board->placeLinkNoNotify(1, 3, std::make_unique<Virus>(2, 1, 'd'));  // d: V2 (row 1 due to server port)
-    board->placeLinkNoNotify(1, 4, std::make_unique<Data>(3, 1, 'e'));   // e: D3 (row 1 due to server port)
-    board->placeLinkNoNotify(0, 5, std::make_unique<Virus>(4, 1, 'f'));  // f: V4
-    board->placeLinkNoNotify(0, 6, std::make_unique<Data>(2, 1, 'g'));   // g: D2
-    board->placeLinkNoNotify(0, 7, std::make_unique<Data>(1, 1, 'h'));   // h: D1
-
-    // Player 2 setup (A through H)
-    board->placeLinkNoNotify(7, 0, std::make_unique<Virus>(1, 2, 'A'));  // A: V1
-    board->placeLinkNoNotify(7, 1, std::make_unique<Data>(4, 2, 'B'));   // B: D4
-    board->placeLinkNoNotify(7, 2, std::make_unique<Virus>(3, 2, 'C'));  // C: V3
-    board->placeLinkNoNotify(6, 3, std::make_unique<Virus>(2, 2, 'D'));  // D: V2 (row 6 due to server port)
-    board->placeLinkNoNotify(6, 4, std::make_unique<Data>(3, 2, 'E'));   // E: D3 (row 6 due to server port)
-    board->placeLinkNoNotify(7, 5, std::make_unique<Virus>(4, 2, 'F'));  // F: V4
-    board->placeLinkNoNotify(7, 6, std::make_unique<Data>(2, 2, 'G'));   // G: D2
-    board->placeLinkNoNotify(7, 7, std::make_unique<Data>(1, 2, 'H'));   // H: D1
 }
 
 bool GameController::isGameOver() const
@@ -98,6 +95,12 @@ void GameController::runGame() {
        if (command == "quit") break;
        handleCommand(command);
    }
+
+   // If we didn't quit, show final game state
+    if (isGameOver()) {
+        board->notifyObservers();  // Show final board state
+        displayGameOver();
+    }
 }
 
 GameController::Direction GameController::stringToDirection(const std::string& dir) {
@@ -154,8 +157,21 @@ bool GameController::makeMove(char piece, Direction dir) {
                        case Direction::RIGHT: newCol++; break;
                    }
                    
-                   // Try to move the piece
-                    return board->moveLink(row, col, newRow, newCol);
+                    int opponentPlayerId;
+                    if (getCurrentPlayer().getPlayerId() == 1) {
+                        opponentPlayerId = 2;
+                    } else {
+                        opponentPlayerId = 1;
+                    }
+
+                    bool moveSuccessful = 
+                    board->moveLink(row, col, newRow, newCol,
+                     getCurrentPlayer(), getPlayer(opponentPlayerId));
+
+                    if (moveSuccessful) {
+                        return true;
+                    }
+                    return false;
                }
            }
        }
@@ -164,3 +180,188 @@ bool GameController::makeMove(char piece, Direction dir) {
 }
 
 
+Player& GameController::getPlayer(int playerId) {
+        for (auto& player : players) {
+            if (player.getPlayerId() == playerId) {
+                return player;
+            }
+        }
+        return players[0];  // Should never happen if used correctly
+}
+
+void GameController::displayGameOver() {
+    std::cout << "\n=== GAME OVER ===\n";
+    
+    // Find who won/lost and announce it
+    for (const auto& player : players) {
+        if (player.hasWon()) {
+            std::cout << "Player " << player.getPlayerId() << " wins by downloading 4 data!\n";
+            break;
+        }
+        else if (player.hasLost()) {
+            std::cout << "Player " << player.getPlayerId() << " loses by downloading 4 viruses!\n";
+            break;
+        }
+    }
+
+    // Show final scores for both players
+    std::cout << "\nFinal Score:\n";
+    
+    // Player 1
+    std::cout << "Player 1:\n";
+    std::cout << "Data Downloads: " << getPlayer(1).getDataCount() << "\n";
+    std::cout << "Virus Downloads: " << getPlayer(1).getVirusCount() << "\n";
+    
+    // Player 2
+    std::cout << "Player 2:\n";
+    std::cout << "Data Downloads: " << getPlayer(2).getDataCount() << "\n";
+    std::cout << "Virus Downloads: " << getPlayer(2).getVirusCount() << "\n";
+    
+    std::cout << "===============\n";
+}
+
+
+std::vector<GameController::LinkInfo> GameController::getDefaultLinks(int playerId) const {
+    
+    char startChar;
+
+    if (playerId == 1) {
+        startChar = 'a';
+    } else if (playerId == 2) {
+        startChar = 'A';
+    } else if (playerId == 3) {
+        startChar = 'i';
+    } else {
+        startChar = 'I';
+    }
+    // static cast to avoid compiler warning 
+    return {
+        {true, 1, startChar},             // V1
+        {false, 4, static_cast<char>(startChar + 1)}, // D4
+        {true, 3, static_cast<char>(startChar + 2)},  // V3
+        {true, 2, static_cast<char>(startChar + 3)},  // V2
+        {false, 3, static_cast<char>(startChar + 4)}, // D3
+        {true, 4, static_cast<char>(startChar + 5)},  // V4
+        {false, 2, static_cast<char>(startChar + 6)}, // D2
+        {false, 1, static_cast<char>(startChar + 7)}  // D1
+    };
+}
+
+std::vector<GameController::LinkInfo> GameController::getRandomizedLinks(int playerId) const {
+    std::vector<LinkInfo> links = getDefaultLinks(playerId);
+    
+    // Shuffle pairs of type and strength while preserving identifiers
+    std::vector<std::pair<bool, int>> typeStrengthPairs;
+    for (const auto& link : links) {
+        typeStrengthPairs.push_back({link.isVirus, link.strength});
+    }
+    
+    // Shuffle the types/strengths
+    for (int i = typeStrengthPairs.size() - 1; i > 0; i--) {
+        int j = std::rand() % (i + 1);
+        std::swap(typeStrengthPairs[i], typeStrengthPairs[j]);
+    }
+    
+    // Reassign the shuffled properties while keeping identifiers in sequence
+    char id;
+    if (playerId == 1) {
+        id = 'a';
+    } else {
+        id = 'A';
+    }
+
+    for (int i = 0; i < links.size(); i++, id++) {
+        links[i].isVirus = typeStrengthPairs[i].first;
+        links[i].strength = typeStrengthPairs[i].second;
+        links[i].identifier = id;
+    }
+    
+    return links;
+}
+
+
+std::vector<GameController::LinkInfo> GameController::parseLinksFile(const std::string& filename, int playerId) const {
+    std::vector<LinkInfo> links;
+    std::ifstream file{filename};
+    std::string token;
+    
+    char identifier;
+    if (playerId == 1) {
+        identifier = 'a';
+    } else {
+        identifier = 'A';
+    }
+
+    if (!file) {
+        throw std::runtime_error("Could not open file: " + filename);
+    }
+
+    while (links.size() < 8 && file >> token) {
+        if (token.length() < 2) {
+            throw std::runtime_error("Invalid link format in file: " + token);
+        }
+
+        LinkInfo info;
+        info.isVirus = (token[0] == 'V');
+        if (token[0] != 'V' && token[0] != 'D') {
+            throw std::runtime_error("Link must be V or D: " + token);
+        }
+
+        info.strength = token[1] - '0';
+        if (info.strength < 1 || info.strength > 4) {
+            throw std::runtime_error("Link strength must be 1-4: " + token);
+        }
+
+        info.identifier = identifier++;
+        links.push_back(info);
+    }
+
+    if (links.size() != 8) {
+        throw std::runtime_error("File must contain exactly 8 links");
+    }
+
+    return links;
+}
+
+void GameController::initializeGame(const std::vector<LinkInfo>& p1Links, const std::vector<LinkInfo>& p2Links) {
+    Player& p1 = getPlayer(1);
+    Player& p2 = getPlayer(2);
+    
+    // Create and add Player 1's links
+    for (const auto& link : p1Links) {
+        if (link.isVirus) {
+            p1.addLink(std::make_unique<Virus>(link.strength, 1, link.identifier));
+        } else {
+            p1.addLink(std::make_unique<Data>(link.strength, 1, link.identifier));
+        }
+    }
+    
+    // Create and add Player 2's links
+    for (const auto& link : p2Links) {
+        if (link.isVirus) {
+            p2.addLink(std::make_unique<Virus>(link.strength, 2, link.identifier));
+        } else {
+            p2.addLink(std::make_unique<Data>(link.strength, 2, link.identifier));
+        }
+    }
+    
+    // Place Player 1's links on board
+    board->placeLinkNoNotify(0, 0, p1.getLinkByIdentifier('a'));
+    board->placeLinkNoNotify(0, 1, p1.getLinkByIdentifier('b'));
+    board->placeLinkNoNotify(0, 2, p1.getLinkByIdentifier('c'));
+    board->placeLinkNoNotify(1, 3, p1.getLinkByIdentifier('d'));
+    board->placeLinkNoNotify(1, 4, p1.getLinkByIdentifier('e'));
+    board->placeLinkNoNotify(0, 5, p1.getLinkByIdentifier('f'));
+    board->placeLinkNoNotify(0, 6, p1.getLinkByIdentifier('g'));
+    board->placeLinkNoNotify(0, 7, p1.getLinkByIdentifier('h'));
+
+    // Place Player 2's links on board
+    board->placeLinkNoNotify(7, 0, p2.getLinkByIdentifier('A'));
+    board->placeLinkNoNotify(7, 1, p2.getLinkByIdentifier('B'));
+    board->placeLinkNoNotify(7, 2, p2.getLinkByIdentifier('C'));
+    board->placeLinkNoNotify(6, 3, p2.getLinkByIdentifier('D'));
+    board->placeLinkNoNotify(6, 4, p2.getLinkByIdentifier('E'));
+    board->placeLinkNoNotify(7, 5, p2.getLinkByIdentifier('F'));
+    board->placeLinkNoNotify(7, 6, p2.getLinkByIdentifier('G'));
+    board->placeLinkNoNotify(7, 7, p2.getLinkByIdentifier('H'));
+}
