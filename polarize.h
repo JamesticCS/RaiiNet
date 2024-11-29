@@ -1,12 +1,20 @@
-// polarize.h
 #ifndef POLARIZE_H
 #define POLARIZE_H
+
 #include "ability.h"
+#include "square.h"
+#include "link.h"
+#include "data.h"
+#include "virus.h"
 
 class Polarize : public Ability {
 public:
-    Polarize();
-    bool execute(Board& board, Player& player, Player& opponent, const std::string& args) override;
+    bool execute(Square* square) override;
+    bool execute(Link* link) override;
+    std::string abilityName() const override;
+    
+private:
+    bool used = false;
 };
 
-#endif
+#endif // POLARIZE_H

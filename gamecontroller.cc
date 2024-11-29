@@ -1,5 +1,13 @@
 // gameController.cc
 #include "gamecontroller.h"
+/*
+#include "linkboost.h"  // For LinkBoostAbility
+#include "firewall.h"   // For FirewallAbility
+#include "scan.h"       // For ScanAbility
+#include "download.h"   // For DownloadAbility
+#include "polarize.h"   // For PolarizeAbility
+*/
+
 GameController::GameController(int numPlayers, std::string link1File, std::string link2File):
  board{std::make_unique<Board>()} {
     // random seeding
@@ -83,6 +91,68 @@ void GameController::handleCommand(const std::string& cmd) {
             std::cout << "==========================\n\n\n";
         }
     }
+    /*
+    else if (command == "abilities")
+    {
+      getCurrentPlayer().displayAbilities();
+    } */
+
+
+    /*
+    else if (command == "ability") {
+    Player& current = getCurrentPlayer();
+
+    // Check if the player has already used an ability this turn
+    if (current.hasUsedAbilityThisTurn()) {
+        std::cout << "You've already used an ability this turn!\n";
+        return;
+    }
+
+    int abilityId;
+    if (!(iss >> abilityId)) {  // Read the ability ID
+        std::cout << "Invalid ability format! Use: ability <number> <args>\n\n";
+        return;
+    }
+
+    std::string args;
+    std::getline(iss >> std::ws, args);  // Read the remaining arguments (e.g., position)
+
+    std::unique_ptr<Ability> ability;
+    std::unique_ptr<Ability> ability;
+    switch (abilityId) {
+        case 1: 
+            ability = std::make_unique<LinkBoost>(board.get());  // Pass the Board* to LinkBoost
+            break;
+        case 2: 
+            ability = std::make_unique<Firewall>(board.get());  // Pass the Board* to Firewall
+            break;
+        case 3: 
+            ability = std::make_unique<Scan>(board.get());  // Pass the Board* to Scan
+            break;
+        case 4: 
+            ability = std::make_unique<Download>(current);  // Pass the Player& to Download
+            break;
+        case 5: 
+            ability = std::make_unique<Polarize>(board.get());  // Pass the Board* to Polarize
+            break;
+        default:
+            std::cout << "Invalid ability ID! Must be between 1-5\n\n";
+        return;
+}
+
+
+    if (ability->execute(current, args)) {
+        current.setAbilityUsedThisTurn(true);
+        current.useAbility(abilityId);  // Assuming Player has a method to track ability use
+    } else {
+        std::cout << "Invalid ability usage!\n\n";
+    }
+    return;
+}
+
+*/
+
+
 }
 
 void GameController::runGame() {
@@ -270,7 +340,7 @@ std::vector<GameController::LinkInfo> GameController::getRandomizedLinks(int pla
         id = 'A';
     }
 
-    for (int i = 0; i < links.size(); i++, id++) {
+    for (size_t i = 0; i < links.size(); i++, id++) {
         links[i].isVirus = typeStrengthPairs[i].first;
         links[i].strength = typeStrengthPairs[i].second;
         links[i].identifier = id;

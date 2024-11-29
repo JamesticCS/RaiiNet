@@ -1,11 +1,18 @@
-// scan.h
 #ifndef SCAN_H
 #define SCAN_H
+
 #include "ability.h"
+#include "square.h"
+#include "link.h"
 
 class Scan : public Ability {
 public:
-    Scan();
-    bool execute(Board& board, Player& player, Player& opponent, const std::string& args) override;
+    bool execute(Square* square) override;
+    bool execute(Link* link) override;
+    std::string abilityName() const override;
+    
+private:
+    bool used = false;
 };
-#endif
+
+#endif // SCAN_H

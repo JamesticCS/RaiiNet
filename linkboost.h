@@ -1,12 +1,17 @@
-// linkboost.h
 #ifndef LINKBOOST_H
 #define LINKBOOST_H
+
 #include "ability.h"
+#include "link.h"
 
 class LinkBoost : public Ability {
 public:
-    LinkBoost();
-    bool execute(Board& board, Player& player, Player& opponent, const std::string& args) override;
+    bool execute(Square* square) override;  // Can't boost a square
+    bool execute(Link* link) override;
+    std::string abilityName() const override;
+    
+private:
+    bool used = false;
 };
 
-#endif
+#endif // LINKBOOST_H

@@ -1,12 +1,18 @@
-// download.h
 #ifndef DOWNLOAD_H
 #define DOWNLOAD_H
+
 #include "ability.h"
+#include "square.h"
+#include "link.h"
 
 class Download : public Ability {
 public:
-    Download();
-    bool execute(Board& board, Player& player, Player& opponent, const std::string& args) override;
+    bool execute(Square* square) override;
+    bool execute(Link* link) override;
+    std::string abilityName() const override;
+    
+private:
+    bool used = false;
 };
 
-#endif
+#endif // DOWNLOAD_H

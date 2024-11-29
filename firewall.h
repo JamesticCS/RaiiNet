@@ -1,12 +1,17 @@
-// firewall.h
 #ifndef FIREWALL_H
 #define FIREWALL_H
+
 #include "ability.h"
+#include "square.h"
 
 class Firewall : public Ability {
 public:
-    Firewall();
-    bool execute(Board& board, Player& player, Player& opponent, const std::string& args) override;
+    bool execute(Square* square) override;
+    bool execute(Link* link) override;
+    std::string abilityName() const override;
+    
+private:
+    bool used = false;
 };
 
-#endif
+#endif // FIREWALL_H

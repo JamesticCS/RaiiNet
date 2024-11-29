@@ -1,5 +1,6 @@
 // player.cc
 #include "player.h"
+
 Player::Player(int id) : playerId{id} {}
 
 void Player::incrementDataCount() {
@@ -56,4 +57,24 @@ Link* Player::getLinkByIdentifier(char id) const {
     return nullptr;
 }
 
- const std::vector<std::unique_ptr<Link>>& Player::getLinks() const { return links; }
+const std::vector<std::unique_ptr<Link>>& Player::getLinks() const { return links; }
+/*
+void Player::displayAbilities() const {
+        std::cout << "Available abilities (" << getRemainingAbilities() << " remaining):\n";
+        for(size_t i = 0; i < abilities.size(); i++) {
+            std::cout << abilities[i]->abilityName() << ": " << (i+1);
+            if(abilities[i]->isUsed()) {
+                std::cout << " (USED)";
+            }
+            std::cout << "\n";
+        }
+    }
+
+    void Player::addAbility(std::unique_ptr<Ability> ability) {
+        abilities.emplace_back(std::move(ability));
+    }
+
+bool Player::hasUsedAbilityThisTurn() const { return UsedAbilityThisTurn; }
+void Player::setAbilityUsedThisTurn(bool used) { UsedAbilityThisTurn = used; }
+
+*/

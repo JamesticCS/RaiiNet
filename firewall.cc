@@ -1,20 +1,17 @@
-// firewall.cc
 #include "firewall.h"
-#include <sstream>
 
-Firewall::Firewall() : Ability('F', "Firewall") {}
-
-bool Firewall::execute(Board& board, Player& player, Player& opponent, const std::string& args) {
-    std::istringstream iss(args);
-    int row, col;
-    if (!(iss >> row >> col)) return false;
-    
-    // Validate position
-    if (!board.isValidPosition(row, col)) return false;
-    if (board.hasLinkAt(row, col)) return false;
-    if (board.isServerPortAt(row, col)) return false;
-    
-    // Place firewall
-    board.placeFirewall(row, col, player.getPlayerId());
+bool Firewall::execute(Square* square) {
+    if (used || !square || square->hasLink() || square->isServerPort()) 
+        return false;
+    square->placeFirewall(/* player id needed */);
+    used = true;
     return true;
+}
+
+bool Firewall::execute(Link* link) {
+    return false;
+}
+
+std::string Firewall::abilityName() const {
+    return "Firewall";
 }
