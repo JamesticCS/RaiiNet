@@ -1,1 +1,1 @@
-CS246 RaiiNET project!
+RaiiNET project!
